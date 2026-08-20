@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Interactive unemployment analysis dashboard for India">
+  <title>India Unemployment Observatory</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <style>.main-content{flex:1;min-width:0;width:auto}.geo-layout{display:grid;grid-template-columns:minmax(0,1.8fr) minmax(180px,1fr);gap:28px;align-items:center}.map-stage{height:320px;position:relative;background:#f1f6ef;overflow:hidden}.map-stage canvas{width:100%;height:100%;display:block}.geo-copy{color:var(--muted);font-size:11px;line-height:1.7}.geo-copy p{margin:16px 0}.geo-copy strong{font:11px 'DM Mono',monospace;color:var(--teal)}.geo-key{display:flex;gap:8px;align-items:center;color:var(--ink);font-weight:700}.geo-key i{width:10px;height:10px;border-radius:50%;background:var(--orange);display:inline-block}.map-tooltip{position:absolute;display:none;background:var(--ink);color:#fff;padding:8px 10px;font:10px 'DM Mono',monospace;pointer-events:none;white-space:nowrap}.map-tooltip.visible{display:block}@media(max-width:620px){.geo-layout{grid-template-columns:1fr}.map-stage{height:240px}}</style>
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark">◎</span><span>INDIA<br><strong>OBSERVATORY</strong></span></div>
+      <div class="sidebar-label">Workspace</div>
+      <nav class="nav-list" aria-label="Main navigation">
+        <button class="nav-item active" type="button"><span>◈</span> Overview</button>
+        <button class="nav-item" type="button" data-scroll="trend-section"><span>⌁</span> Trends</button>
+        <button class="nav-item" type="button" data-scroll="states-section"><span>▦</span> States</button>
+        <button class="nav-item" type="button" data-scroll="insights-section"><span>✦</span> Insights</button>
+      </nav>
+      <div class="sidebar-foot"><span class="status-dot"></span><span><strong>LIVE DATASET</strong><small>Updated from local CSV</small></span></div>
+    </aside>
+
+    <main class="main-content">
+      <header class="topbar">
+        <div class="breadcrumb"><span>ANALYTICS</span><b>/</b> NATIONAL SNAPSHOT</div>
+        <div class="top-actions"><span class="data-period">May 2019 — Nov 2020</span><button class="icon-button" id="downloadButton" type="button" title="Download filtered data" aria-label="Download filtered data">⇩</button></div>
+      </header>
+
+      <section class="intro">
+        <div><p class="eyebrow">TASK 02 · ECONOMIC SIGNALS</p><h1>Unemployment,<br><em>made visible.</em></h1><p class="intro-copy">A clear view of how work, participation, and the shock of COVID-19 reshaped India’s labour market.</p></div>
+        <div class="intro-note"><span class="note-line"></span><p>“The most useful pattern is often the one hiding between two averages.”</p><small>OBSERVATORY NOTE / 01</small></div>
+      </section>
+
+      <section class="filters" aria-label="Dashboard filters">
+        <div class="filter-group"><label for="regionFilter">Region</label><select id="regionFilter"><option value="All India">All India</option></select></div>
+        <div class="filter-group"><label for="areaFilter">Area</label><select id="areaFilter"><option value="All">Rural + Urban</option><option value="Rural">Rural</option><option value="Urban">Urban</option></select></div>
+        <div class="filter-group"><label for="dateFilter">View period</label><select id="dateFilter"><option value="all">Full timeline</option><option value="2020">2020 only</option><option value="pre-covid">Pre-COVID baseline</option></select></div>
+        <button class="reset-button" id="resetButton" type="button">Reset filters <span>↗</span></button>
+      </section>
+
+      <section class="kpi-grid" aria-label="Key performance indicators">
+        <article class="kpi-card accent"><div class="kpi-head"><span>National average</span><span class="kpi-icon">%</span></div><div class="kpi-value" id="avgRate">—</div><div class="kpi-foot"><span class="trend-pill" id="avgTrend">—</span><span>unemployment rate</span></div></article>
+        <article class="kpi-card"><div class="kpi-head"><span>Peak monthly rate</span><span class="kpi-icon">↗</span></div><div class="kpi-value" id="peakRate">—</div><div class="kpi-foot"><span class="date-label" id="peakDate">—</span><span>highest observed</span></div></article>
+        <article class="kpi-card"><div class="kpi-head"><span>People employed</span><span class="kpi-icon">◌</span></div><div class="kpi-value compact" id="employed">—</div><div class="kpi-foot"><span>latest available</span><span>estimated total</span></div></article>
+        <article class="kpi-card"><div class="kpi-head"><span>COVID impact</span><span class="kpi-icon">!</span></div><div class="kpi-value" id="covidImpact">—</div><div class="kpi-foot"><span class="impact-label">Apr 2020 shock</span><span>vs. 2019 baseline</span></div></article>
+      </section>
+
+      <section class="chart-grid" id="trend-section">
+        <article class="panel trend-panel"><div class="panel-heading"><div><p class="section-kicker">01 / NATIONAL TREND</p><h2>Rate over time</h2></div><div class="legend"><span class="legend-dot lime"></span>Unemployment rate <span class="legend-dot orange"></span>Labour participation</div></div><div class="chart-wrap trend-chart-wrap"><canvas id="trendChart"></canvas></div><div class="chart-caption"><span class="caption-bar"></span><p><strong>COVID-19 shock</strong> — April 2020 marks the sharpest break in the series, followed by a gradual normalisation through late 2020.</p></div></article>
+        <article class="panel composition-panel"><div class="panel-heading"><div><p class="section-kicker">02 / DISTRIBUTION</p><h2>Area comparison</h2></div></div><div class="chart-wrap donut-wrap"><canvas id="areaChart"></canvas><div class="donut-center"><strong id="areaAverage">—</strong><span>average rate</span></div></div><div class="area-legend" id="areaLegend"></div></article>
+      </section>
+
+      <section class="panel states-panel" id="states-section"><div class="panel-heading"><div><p class="section-kicker">03 / REGIONAL LENS</p><h2>State performance</h2></div><span class="panel-meta" id="stateMeta">Loading…</span></div><div class="state-table" id="stateTable"></div></section>
+
+      <section class="panel geo-panel"><div class="panel-heading"><div><p class="section-kicker">04 / GEOGRAPHIC LENS</p><h2>Where the pressure sits</h2></div><span class="panel-meta">2020 location dataset</span></div><div class="geo-layout"><div class="map-stage"><canvas id="geoCanvas" aria-label="State unemployment geographic plot"></canvas><div class="map-tooltip" id="mapTooltip"></div></div><div class="geo-copy"><span class="geo-key"><i></i>Higher unemployment</span><p>Each point represents a state or territory from the second supplied CSV. Hover over a point to inspect its latest 2020 rate.</p><strong id="geoSummary">Loading locations…</strong></div></div></section>
+
+      <section class="insight-band" id="insights-section"><div><p class="section-kicker">FIELD NOTES</p><h2>What the data says</h2></div><div class="insight-copy"><div class="insight-number">01</div><p><strong>The rural-urban gap is real.</strong> Urban unemployment generally reacts more sharply to disruption, while rural employment carries a larger share of the recovery signal.</p></div><div class="insight-copy"><div class="insight-number">02</div><p><strong>Recovery is uneven.</strong> State averages hide meaningful differences. Use the filters above to move from the national pulse to a local story.</p></div></section>
+      <footer><span>INDIA UNEMPLOYMENT OBSERVATORY</span><span>Source: CMIE-inspired public dataset · Local analysis</span></footer>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status">Filtered data downloaded</div>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
